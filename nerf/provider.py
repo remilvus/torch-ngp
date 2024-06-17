@@ -92,7 +92,7 @@ def rand_poses(size, device, radius=1, theta_range=[np.pi/3, 2*np.pi/3], phi_ran
 
 
 class NeRFDataset:
-    def __init__(self, opt, device, type='train', downscale=1, n_test=10):
+    def __init__(self, opt, device, type='train', downscale=1, n_test=10, render_color=False):
         super().__init__()
         
         self.opt = opt
@@ -106,7 +106,7 @@ class NeRFDataset:
         self.bound = opt.bound # bounding box half length, also used as the radius to random sample poses.
         self.fp16 = opt.fp16 # if preload, load into fp16.
 
-        self.training = self.type in ['train', 'all', 'trainval']
+        self.training = self.type in ['train', 'all', 'trainval'] and not render_color
         self.num_rays = self.opt.num_rays if self.training else -1
 
         self.rand_pose = opt.rand_pose

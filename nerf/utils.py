@@ -592,7 +592,7 @@ class Trainer(object):
         return pred_rgb, pred_depth, gt_rgb, loss
 
     # moved out bg_color and perturb for more flexible control...
-    def test_step(self, data, bg_color=None, perturb=False):  
+    def test_step(self, data, bg_color=None, perturb=False, render_colors=False, radius=None):
 
         rays_o = data['rays_o'] # [B, N, 3]
         rays_d = data['rays_d'] # [B, N, 3]
@@ -601,7 +601,7 @@ class Trainer(object):
         if bg_color is not None:
             bg_color = bg_color.to(self.device)
 
-        outputs = self.model.render(rays_o, rays_d, staged=True, bg_color=bg_color, perturb=perturb, **vars(self.opt))
+        outputs = self.model.render(rays_o, rays_d, staged=True, bg_color=bg_color, perturb=perturb, **vars(self.opt), render_colors=render_colors, color_radius=radius)
 
         pred_rgb = outputs['image'].reshape(-1, H, W, 3)
         pred_depth = outputs['depth'].reshape(-1, H, W)
@@ -663,6 +663,48 @@ class Trainer(object):
         self.use_tensorboardX, use_tensorboardX = False, self.use_tensorboardX
         self.evaluate_one_epoch(loader, name, out_folder=out_folder)
         self.use_tensorboardX = use_tensorboardX
+        
+    def render_color(self, loader, radius,name=None, i=0):
+        """Render a view based only on color outputs.
+
+        This function prepares model outputs for FreSh. During rendering, only
+        a slice (at distance `radius` from the camera) of the scene is considered.
+        """
+        save_path = os.path.join(self.workspace, f'{name}/{i}.npy')
+        save_path_img = os.path.join(self.workspace, f'{name}/{i}.png')
+        dataset_name = Path(self.workspace).stem
+        save_path_dataset = os.path.join(self.workspace, f'../{dataset_name}.npy')
+
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+
+        self.log(f"==> Start color rendering, save results to {save_path}")
+        self.model.eval()
+
+
+        all_data = list(enumerate(loader))
+        if i == 0:
+            images = map(lambda x: x[1]['images'], all_data)
+            images = torch.concat(list(images), dim=0)
+            bg_color = 0
+            if images.shape[-1] == 4:
+                gt_rgb = images[..., :3] * images[..., 3:] + bg_color * (1 - images[..., 3:])
+            else:
+                gt_rgb = images
+            np.save(save_path_dataset, gt_rgb.cpu().numpy(), allow_pickle=False)
+
+        with torch.no_grad():
+            i, data = all_data[np.random.choice(len(all_data))]
+            # with torch.cuda.amp.autocast(enabled=self.fp16):
+            preds, _ = self.test_step(data, render_colors=True, radius=radius)
+
+            pred = preds[0].detach().cpu().numpy()
+            np.save(save_path, pred, allow_pickle=False)
+            
+            pred -= pred.min()
+            pred /= pred.max()
+            pred = (pred * 255).astype(np.uint8)
+            cv2.imwrite(save_path_img, cv2.cvtColor(pred, cv2.COLOR_RGB2BGR))
+
 
     def test(self, loader, save_path=None, name=None, write_video=True):
 

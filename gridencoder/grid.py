@@ -94,7 +94,11 @@ grid_encode = _grid_encode.apply
 
 
 class GridEncoder(nn.Module):
-    def __init__(self, input_dim=3, num_levels=16, level_dim=2, per_level_scale=2, base_resolution=16, log2_hashmap_size=19, desired_resolution=None, gridtype='hash', align_corners=False, interpolation='linear'):
+    def __init__(self, input_dim=3, num_levels=16, level_dim=2,
+                 per_level_scale=2, base_resolution=16,
+                 log2_hashmap_size=19, desired_resolution=None,
+                 gridtype='hash', align_corners=False, interpolation='linear',
+                 hashmap_high_values=False):
         super().__init__()
 
         # the finest resolution desired at the last level, if provided, overridee per_level_scale
@@ -113,6 +117,7 @@ class GridEncoder(nn.Module):
         self.interpolation = interpolation
         self.interp_id = _interp_to_id[interpolation] # "linear" or "smoothstep"
         self.align_corners = align_corners
+        self.hashmap_high_values = hashmap_high_values
 
         # allocate parameters
         offsets = []
@@ -136,7 +141,10 @@ class GridEncoder(nn.Module):
         self.reset_parameters()
     
     def reset_parameters(self):
-        std = 1e-4
+        if self.hashmap_high_values:
+            std = 1e-2
+        else:
+            std = 1e-4
         self.embeddings.data.uniform_(-std, std)
 
     def __repr__(self):

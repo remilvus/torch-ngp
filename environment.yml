@@ -3,25 +3,27 @@ channels:
   - pytorch
   - conda-forge
 dependencies:
-  - python
+  - python=3.7
   - cudatoolkit=11.3
   - ninja
   - trimesh
   - opencv
   - tensorboardX
-  - pytorch
-  - numpy 
+  - pytorch==1.10.1
+  - numpy
   - pandas
   - tqdm
   - matplotlib
   - rich
   - packaging
   - scipy
-  - pip:
-    - imageio
-    - lpips
-    - torch-ema
-    - PyMCubes
-    - pysdf
-    - dearpygui
-    - git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
+#  - pip:
+#    - torch==1.10.1
+#    - imageio
+#    - lpips
+#    - torch-ema
+#    - PyMCubes
+#    - pysdf
+#    - dearpygui
+#    - git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
+#    - git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch.git@c18f6803668dec3a56a36deaa48d53f7a0582d8d
