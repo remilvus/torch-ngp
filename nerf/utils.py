@@ -1,5 +1,7 @@
 import os
 import glob
+from pathlib import Path
+
 import tqdm
 import math
 import imageio
@@ -657,9 +659,9 @@ class Trainer(object):
         if self.use_tensorboardX and self.local_rank == 0:
             self.writer.close()
 
-    def evaluate(self, loader, name=None):
+    def evaluate(self, loader, name=None, out_folder='validation'):
         self.use_tensorboardX, use_tensorboardX = False, self.use_tensorboardX
-        self.evaluate_one_epoch(loader, name)
+        self.evaluate_one_epoch(loader, name, out_folder=out_folder)
         self.use_tensorboardX = use_tensorboardX
 
     def test(self, loader, save_path=None, name=None, write_video=True):
@@ -912,7 +914,7 @@ class Trainer(object):
         self.log(f"==> Finished Epoch {self.epoch}.")
 
 
-    def evaluate_one_epoch(self, loader, name=None):
+    def evaluate_one_epoch(self, loader, name=None, out_folder='validation'):
         self.log(f"++> Evaluate at epoch {self.epoch} ...")
 
         if name is None:
@@ -968,8 +970,8 @@ class Trainer(object):
                         metric.update(preds, truths)
 
                     # save image
-                    save_path = os.path.join(self.workspace, 'validation', f'{name}_{self.local_step:04d}_rgb.png')
-                    save_path_depth = os.path.join(self.workspace, 'validation', f'{name}_{self.local_step:04d}_depth.png')
+                    save_path = os.path.join(self.workspace, out_folder, f'{name}_{self.local_step:04d}_rgb.png')
+                    save_path_depth = os.path.join(self.workspace, out_folder, f'{name}_{self.local_step:04d}_depth.png')
 
                     #self.log(f"==> Saving validation image to {save_path}")
                     os.makedirs(os.path.dirname(save_path), exist_ok=True)
