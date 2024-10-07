@@ -3,7 +3,7 @@
 This repository is a modified version of [torch-ngp](https://github.com/ashawkey/torch-ngp),
 containing NeRF experiments testing the FreSh method. If you wany to do something else that
 reproducing our experiments, please refer to the original repository. 
-The main FreSh repository can be found \[here\](TODO).
+The main FreSh repository can be found [here](https://github.com/gmum/FreSh).
 
 ## Setup
 
